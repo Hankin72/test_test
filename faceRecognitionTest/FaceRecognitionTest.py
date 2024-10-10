@@ -6,7 +6,7 @@ from insightface.app import FaceAnalysis
 from insightface.data import get_image as ins_get_image
 import onnxruntime as ort
 from FaceUtils import *
-from FaceDatabase import load_face_database,DEFAULT_FILENAME_DB
+from FaceDatabase import load_face_database, DEFAULT_FILENAME_DB
 
 FACE_DATABASE = load_face_database(filename=DEFAULT_FILENAME_DB)
 
@@ -45,12 +45,13 @@ class FaceRecognitionTest:
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, det_size[1])
 
         self.flip = flip
-        self.threshold = .5
+        self.threshold = .50
 
-        # 视频写入器设置
-        self.output_filename = "output.mp4"
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # 指定视频编码
-        self.video_writer = cv2.VideoWriter(self.output_filename, fourcc, 20.0, (det_size[0], det_size[1]))
+        fourcc = cv2.VideoWriter.fourcc('M', 'J', 'P', 'G')
+        self.cap.set(cv2.CAP_PROP_FOURCC, fourcc)
+        width = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        self.out = cv2.VideoWriter('output.avi', fourcc, 20, (width, height))
 
     def process_frame(self, frame):
         """
@@ -131,8 +132,8 @@ class FaceRecognitionTest:
             img = self.process_frame(img)
             cv2.imshow('Real-time Face Detection', img)
             show_image(img)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                return
+            # if cv2.waitKey(1) & 0xFF == ord('q'):
+            #     return
         else:
             while True:
                 ret, frame = self.cap.read()
@@ -144,11 +145,13 @@ class FaceRecognitionTest:
                     frame = cv2.flip(frame, 1)
 
                 frame = self.process_frame(frame)
+
+                # self.out.write(frame)
+
                 cv2.imshow('Real-time Face Detection', frame)
 
                 # 写入视频文件
-                if save_Video:
-                    self.video_writer.write(frame)
+                self.out.write(frame)
 
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
@@ -157,7 +160,7 @@ class FaceRecognitionTest:
 
     def release(self):
         self.cap.release()
-        self.video_writer.release()  # 释放视频写入器
+        # self.video_writer.release()  # 释放视频写入器
         cv2.destroyAllWindows()
 
     def __del__(self):
@@ -173,5 +176,5 @@ if __name__ == '__main__':
         camera_index=0,
         flip=True
     )
-    detector.run(save_Video=False)
+    detector.run(save_Video=True)
     # detector.run(image_path="dataset/02_IMG_8647.JPG")
