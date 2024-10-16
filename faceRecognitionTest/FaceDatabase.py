@@ -20,7 +20,7 @@ class FaceDatabase:
             self.known_faces_db[name].append(embedding)  # 如果该人名已经存在，则添加新特征
         else:
             self.known_faces_db[name] = [embedding]  # 否则新建一个列表
-        print(f"Add face to db: {name}")
+        print(f">>>>> Add face to db: {name}")
 
     def save_to_file(self, filename=DEFAULT_FILENAME_DB):
         """
@@ -28,7 +28,7 @@ class FaceDatabase:
         - filename: 保存文件的路径 (默认为 {DEFAULT_FILENAME_DB})
         """
         np.save(filename, self.known_faces_db)
-        print(f"face db saved to file: {filename}")
+        print(f">>>> face db saved to file: {filename}")
 
     def load_from_file(self, filename=DEFAULT_FILENAME_DB):
         """
@@ -87,7 +87,7 @@ def save_face_database(image_paths=[], person_name="", filename=DEFAULT_FILENAME
     detector = FaceDetector()
 
     for image_path in image_paths:
-        print("detector image_path: " + image_path)
+        print(">>>>> detector image_path: " + image_path)
         faces = detector.detect_and_extract(image_path)
         if faces:
             for face in faces:
@@ -107,6 +107,6 @@ def load_face_database(filename=""):
 
 if __name__ == '__main__':
     # path = "./sample/U"
-    image_paths = get_image_paths("./sample/hankin")
+    image_paths = get_image_paths("./sample/haojin")
 
-    save_face_database(image_paths=image_paths, person_name="fuming", filename=DEFAULT_FILENAME_DB)
+    save_face_database(image_paths=image_paths, person_name="haojin", filename=DEFAULT_FILENAME_DB)
