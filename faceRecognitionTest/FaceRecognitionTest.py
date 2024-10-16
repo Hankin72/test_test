@@ -40,18 +40,12 @@ class FaceRecognitionTest:
         if not self.cap.isOpened():
             raise IOError("无法打开摄像头")
 
-        # 设置摄像头分辨率
-        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, det_size[0])
-        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, det_size[1])
+        # self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, det_size[0])
+        # self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, det_size[1])
 
         self.flip = flip
-        self.threshold = .50
+        self.threshold = .45
 
-        fourcc = cv2.VideoWriter.fourcc('M', 'J', 'P', 'G')
-        self.cap.set(cv2.CAP_PROP_FOURCC, fourcc)
-        width = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-        height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        self.out = cv2.VideoWriter('output.avi', fourcc, 20, (width, height))
 
     def process_frame(self, frame):
         """
@@ -73,17 +67,24 @@ class FaceRecognitionTest:
             draw_colored_landmarks(frame, lmk)
             # for i in range(lmk.shape[0]):
             #     p = tuple(lmk[i])
-            #     cv2.circle(frame, p, 1, color, 1, cv2.LINE_AA)
+            #     cv2.circle(frame, p, 1, COLOR_GREEN, -1)
+                # cv2.circle(frame, p, 1, COLOR_GREEN, 1, cv2.LINE_AA)
 
             embedding = face.embedding
             if embedding is None:
                 print("Error: 无法提取特征向量")
                 continue
 
-            name = self.recognize_face(embedding)
-            cv2.putText(frame, name, (bbox[0], bbox[1] - 10),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.9, COLOR_RED, 2)
-
+            name, pre = self.recognize_face(embedding)
+            # pre = "{:.2f}".format(pre)
+            # temp_label = f"{name} {pre}"
+            # print(temp_label)
+            if name == "Unknown":
+                cv2.putText(frame, name, (bbox[0], bbox[1] - 10),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.9, COLOR_GREEN, 2)
+            else:
+                cv2.putText(frame, name, (bbox[0], bbox[1] - 10),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.9, COLOR_RED, 2)
         return frame
 
     @staticmethod
@@ -117,46 +118,43 @@ class FaceRecognitionTest:
                 if similarity > highest_similarity:
                     highest_similarity = similarity
                     best_match = name
-
-        if highest_similarity > self.threshold:
-            return best_match
+        if highest_similarity >= self.threshold:
+            return best_match, highest_similarity
         else:
-            return 'Unknown'
+            return 'Unknown', highest_similarity
 
-    def run(self, image_path=None, save_Video=False):
+    def run(self):
         """
         运行实时人脸检测。
         """
-        if image_path:
-            img = cv2.imread(image_path)
-            img = self.process_frame(img)
-            cv2.imshow('Real-time Face Detection', img)
-            show_image(img)
+        # if image_path:
+        #     img = cv2.imread(image_path)
+        #     img = self.process_frame(img)
+        #     cv2.imshow('Real-time Face Detection', img)
+        #     show_image(img)
+        #     # if cv2.waitKey(1) & 0xFF == ord('q'):
+        #     #     return
+        # else:
+        while True:
+            ret, frame = self.cap.read()
+            if not ret:
+                print("Can't receive frame (stream end?). Exiting ...")
+                break
+
+            if self.flip:
+                frame = cv2.flip(frame, 1)
+
+            frame = self.process_frame(frame)
+
+            # self.out.write(frame)
+
+            cv2.imshow('Real-time Face Detection', frame)
+
+            if cv2.waitKey(1) == ord('q'):
             # if cv2.waitKey(1) & 0xFF == ord('q'):
-            #     return
-        else:
-            while True:
-                ret, frame = self.cap.read()
-                if not ret:
-                    print("无法获取帧，正在退出")
-                    break
+                break
 
-                if self.flip:
-                    frame = cv2.flip(frame, 1)
-
-                frame = self.process_frame(frame)
-
-                # self.out.write(frame)
-
-                cv2.imshow('Real-time Face Detection', frame)
-
-                # 写入视频文件
-                self.out.write(frame)
-
-                if cv2.waitKey(1) & 0xFF == ord('q'):
-                    break
-
-            self.release()
+        self.release()
 
     def release(self):
         self.cap.release()
@@ -169,12 +167,11 @@ class FaceRecognitionTest:
 
 if __name__ == '__main__':
     detector = FaceRecognitionTest(
-        model_name='buffalo_l',
+        model_name=USE_DEFAULT_MODEL,
         allowed_modules=['detection', 'recognition', 'landmark_2d_106'],
         ctx_id=-1,  # 设置为 -1 使用 CPU
-        det_size=(640, 640),
+        det_size=(320, 320),
         camera_index=0,
         flip=True
     )
-    detector.run(save_Video=True)
-    # detector.run(image_path="dataset/02_IMG_8647.JPG")
+    detector.run()

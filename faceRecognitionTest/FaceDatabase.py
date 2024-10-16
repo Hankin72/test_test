@@ -3,6 +3,7 @@ import os.path
 import cv2
 import numpy as np
 from insightface.app import FaceAnalysis
+from FaceUtils import *
 
 DEFAULT_FILENAME_DB = 'my_face_database.npy'
 
@@ -40,8 +41,8 @@ class FaceDatabase:
 
 
 class FaceDetector:
-    def __init__(self, model_name='buffalo_l'):
-        self.app = FaceAnalysis(name=model_name, allowed_modules=['detection', 'recognition'])
+    def __init__(self, model_name=USE_DEFAULT_MODEL):
+        self.app = FaceAnalysis(name=model_name, allowed_modules=['detection', 'recognition', 'landmark_2d_106'])
         self.app.prepare(ctx_id=-1, det_size=(640, 640))  # 使用 CPU
 
     def detect_and_extract(self, image_path):
@@ -70,7 +71,7 @@ def get_image_paths(directory):
 
     return image_paths
 
-def save_face_database(image_paths=[], person_name=""):
+def save_face_database(image_paths=[], person_name="", filename=DEFAULT_FILENAME_DB):
     """
     将多个图片的 embedding 存入人脸数据库。
     参数:
@@ -78,6 +79,11 @@ def save_face_database(image_paths=[], person_name=""):
     - person_name: 对应的用户姓名
     """
     face_db = FaceDatabase()
+
+    if os.path.exists(filename):
+        face_db.load_from_file()
+    else:
+        print(f"{filename} not exists, create a face-db")
     detector = FaceDetector()
 
     for image_path in image_paths:
@@ -100,7 +106,7 @@ def load_face_database(filename=""):
 
 
 if __name__ == '__main__':
-    path = "./sample/hankin"
+    # path = "./sample/U"
     image_paths = get_image_paths("./sample/hankin")
 
-    save_face_database(image_paths=image_paths, person_name="Hankin")
+    save_face_database(image_paths=image_paths, person_name="fuming", filename=DEFAULT_FILENAME_DB)

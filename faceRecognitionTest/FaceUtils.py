@@ -21,6 +21,8 @@ NOSE_COLOR = (235, 206, 135)  # 鼻子
 COLOR_RED = (0, 0, 255)  # 绘图颜色，绿色
 COLOR_GREEN = (0, 255, 0)
 
+MODELS=['buffalo_s', 'buffalo_l']
+USE_DEFAULT_MODEL = MODELS[0]
 
 def draw_on(img, face):
     import cv2
