@@ -26,6 +26,10 @@ USE_DEFAULT_MODEL = MODELS[0]
 
 ALLOW_MODULES=['detection', 'recognition', 'landmark_2d_106']
 
+import onnxruntime as ort
+PROVIDERS = []
+PROVIDERS = PROVIDERS if PROVIDERS else ort.get_available_providers()
+
 def draw_on(img, face):
     import cv2
     import numpy as np

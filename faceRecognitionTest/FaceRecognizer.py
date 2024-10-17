@@ -5,6 +5,8 @@ import insightface
 from insightface.app import FaceAnalysis
 from insightface.data import get_image as ins_get_image
 import onnxruntime as ort
+from picamera2 import Picamera2
+
 from FaceUtils import *
 from FaceDatabase import load_face_database, DEFAULT_FILENAME_DB
 
@@ -80,7 +82,7 @@ class FaceRecognizer:
         return None  # 如果未找到指定的人，返回 None
 
 
-class FaceRecognitionApp:
+class USBFaceRecognitionApp:
     def __init__(self,
                  model_name='buffalo_s',
                  allowed_modules=ALLOW_MODULES,
@@ -128,7 +130,7 @@ class FaceRecognitionApp:
                             cv2.FONT_HERSHEY_SIMPLEX, 0.9, COLOR_RED, 2)
 
 
-            cv2.imshow('hello ', frame)
+            cv2.imshow('usb CAM detect', frame)
 
             if cv2.waitKey(1) == ord('q'):
                 break
@@ -140,14 +142,85 @@ class FaceRecognitionApp:
         cv2.destroyAllWindows()
 
 
+class CsiFaceTest:
+    def __init__(self,
+                 model_name='buffalo_s',
+                 allowed_modules=ALLOW_MODULES,
+                 providers=None,
+                 ctx_id=0,
+                 det_size=(640, 640),
+                 camera_index=0,
+                 flip=True):
+        """
+        初始化人脸识别应用程序。
+        """
+        self.flip = flip
+
+        self.picam2 = Picamera2()
+
+        # main={"size": (640, 480)}
+        self.picam2.configure(self.picam2.create_preview_configuration())
+        self.picam2.start()
+
+        if not self.picam2.is_open:
+            raise IOError("无法打开CSI摄像头")
+
+        self.face_recognizer = FaceRecognizer(
+            model_name=model_name,
+            allowed_modules=allowed_modules,
+            providers=providers,
+            ctx_id=ctx_id,
+            det_size=det_size
+        )
+
+    def run(self, target_name):
+
+        while True:
+            frame = self.picam2.capture_array()
+            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+            if self.flip:
+                frame_rgb = cv2.flip(frame_rgb, 1)
+
+            result = self.face_recognizer.find_someone(frame_rgb, target_name)
+            if result:
+                face_left, face_top, face_right, face_bottom, image_width, image_height = result
+                print(face_left, face_top, face_right, face_bottom, image_width, image_height)
+
+                cv2.rectangle(frame_rgb, (face_left, face_top), (face_right, face_bottom), COLOR_RED, 2)
+                cv2.putText(frame_rgb, target_name, (face_left, face_top - 10),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.9, COLOR_RED, 2)
+
+            cv2.imshow('Csi detect', frame_rgb)
+
+            if cv2.waitKey(1) == ord('q'):
+                break
+
+        self.release()
+
+    def release(self):
+        self.picam2.stop()
+        cv2.destroyAllWindows()
+
+
+
+
 if __name__ == '__main__':
     target_person_name = "haojin"  # 替换为你要寻找的人的名字
-    app = FaceRecognitionApp(
+    app = CsiFaceTest(
         model_name='buffalo_s',
         allowed_modules=['detection', 'recognition', 'landmark_2d_106'],
         ctx_id=-1,  # 使用 CPU
-        det_size=(320, 320),
-        camera_index=0,
+        det_size=(640, 640),
+        camera_index=8,
         flip=True
     )
+    # app = USBFaceRecognitionApp(
+    #     model_name='buffalo_s',
+    #     allowed_modules=['detection', 'recognition', 'landmark_2d_106'],
+    #     ctx_id=-1,  # 使用 CPU
+    #     det_size=(640, 640),
+    #     camera_index=8,
+    #     flip=True
+    # )
     app.run(target_person_name)
