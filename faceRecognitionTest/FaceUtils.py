@@ -23,7 +23,7 @@ COLOR_GREEN = (0, 255, 0)
 
 MODELS=['buffalo_s', 'buffalo_l']
 USE_DEFAULT_MODEL = MODELS[0]
-
+LOCAL_MODELS_PATH = "./local_model"
 ALLOW_MODULES=['detection', 'recognition', 'landmark_2d_106']
 
 import onnxruntime as ort

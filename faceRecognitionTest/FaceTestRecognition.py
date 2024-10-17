@@ -33,7 +33,7 @@ class FaceRecognitionTest:
         """
         self.providers = providers if providers else ort.get_available_providers()
         print('Available providers:', self.providers)
-        self.app = FaceAnalysis(name=model_name, allowed_modules=allowed_modules, providers=self.providers)
+        self.app = FaceAnalysis(name=model_name, allowed_modules=allowed_modules, providers=self.providers, root=LOCAL_MODELS_PATH)
         self.app.prepare(ctx_id=ctx_id, det_size=det_size)
 
         self.cap = cv2.VideoCapture(camera_index)
@@ -151,7 +151,6 @@ class FaceRecognitionTest:
             cv2.imshow('Real-time Face Detection', frame)
 
             if cv2.waitKey(1) == ord('q'):
-            # if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
 
         self.release()
