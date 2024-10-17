@@ -24,6 +24,8 @@ COLOR_GREEN = (0, 255, 0)
 MODELS=['buffalo_s', 'buffalo_l']
 USE_DEFAULT_MODEL = MODELS[0]
 
+ALLOW_MODULES=['detection', 'recognition', 'landmark_2d_106']
+
 def draw_on(img, face):
     import cv2
     import numpy as np
