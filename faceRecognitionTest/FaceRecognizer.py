@@ -21,7 +21,7 @@ class FaceRecognizer:
 
         self.providers = providers if providers else ort.get_available_providers()
         print('Available providers:', self.providers)
-        self.app = FaceAnalysis(name=model_name, allowed_modules=allowed_modules, providers=self.providers)
+        self.app = FaceAnalysis(name=model_name, allowed_modules=allowed_modules, providers=self.providers, root="./local_model")
         self.app.prepare(ctx_id=ctx_id, det_size=det_size)
         self.threshold = .50
 
